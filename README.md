@@ -1,26 +1,25 @@
-# econ5200-PS3
-# Diagnosing Experimental Failures in A/B Testing
+# ECON 5200 PS3: The Rollout That Looked Like It Worked
 
 ## Objective
 
-I diagnosed and fixed several ways an A/B test can give misleading results, covering variance reduction, sample ratio mismatch, interference between users, Bayesian decision rules, and peeking.
+I showed that a standard two-way fixed effects (TWFE) regression gave a badly wrong estimate of a program rollout with staggered adoption, and I rebuilt the estimate using only clean comparisons.
 
 ## Methodology
 
-- Found and fixed three bugs in an analyst's CUPED (variance reduction) code, then compared the variance reduction and standard error before and after my fixes.
-- Ran sample ratio mismatch tests on two experiments, one with 100,000 users and one with 20 million, and compared the chi-squared statistics.
-- Simulated a marketplace where discounted buyers take inventory from the control group, then compared the A/B test's naive ATE with the effect of rolling the discount out to everyone.
-- Ran a Bayesian A/B test, computed P(B > A) and the expected loss of shipping B, applied the ship rule, and checked the result against a permutation test.
-- Wrote my own function for the Bayesian test and used it on a test with four times the users.
-- Simulated peeking by running 1,000 experiments with no true effect and testing at 50 points in each, then compared against a single test at the end.
-- (Challenge) Applied CUPED to the LaLonde job training data, using re74 and re75 as covariates.
+- Replicated Card & Krueger's minimum wage study as a 2x2 difference-in-differences and as a regression, and both gave +2.75 FTE.
+- Built a simulated panel of 40 counties in 8 regional boards over 12 years, where I set the true effects myself.
+- Ran the agency's TWFE regression on the panel and compared it with the true average effect on treated county-years.
+- Decomposed TWFE into its 2x2 comparisons and measured how much weight fell on already-treated counties used as controls.
+- Estimated the effect using only not-yet-treated controls, built from 30 group-by-year comparisons.
+- Plotted an event study with pre-treatment estimates to look at parallel trends.
+- Compared default, county-clustered and board-clustered standard errors, then ran a wild cluster bootstrap with all 2^8 sign patterns, since there are only 8 boards.
+- Wrote the methods into a reusable module (`src/did_toolkit.py`).
 
 ## Key Findings
 
-- **CUPED bugs:** The analyst reported a [YOUR VALUE]% variance reduction. After my fixes it was [YOUR VALUE]%, and the standard error fell from [YOUR VALUE] to [YOUR VALUE].
-- **Sample ratio mismatch:** A [YOUR VALUE] pp imbalance among 100,000 users gave a chi-squared of [YOUR VALUE]. A [YOUR VALUE] pp imbalance among 20 million users gave [YOUR VALUE].
-- **Interference:** The naive ATE was [YOUR VALUE], against [YOUR VALUE] for rolling the discount out to everyone. The A/B test overstated the effect by [YOUR VALUE]% of the naive estimate.
-- **Bayesian test:** P(B > A) was [YOUR VALUE] and the expected loss of shipping B was [YOUR VALUE], so the ship rule said [YOUR VALUE]. The permutation test gave p = [YOUR VALUE].
-- **Larger test:** With four times the users, my own function gave P(B > A) = [YOUR VALUE].
-- **Peeking:** [YOUR VALUE]% of the 1,000 no-effect experiments crossed p < 0.05 at least once across the 50 looks, against [YOUR VALUE]% with a single test at the end.
-- **Challenge (LaLonde):** Adding re74 and re75 as covariates cut the variance by [YOUR VALUE]%.
+- The agency's TWFE estimate was -0.15, while the true average effect on treated county-years was 7.73.
+- About 38% of the TWFE weight sat on comparisons that use already-treated counties as controls. Those comparisons averaged -8.7, which pulled the estimate down.
+- The clean estimate was 7.61. Dropping one board at a time moved it between 6.24 and 8.41.
+- The board-clustered standard error was 3.31, compared with 0.73 by default and 1.42 clustered by county. Treatment was assigned by board, so board clustering is the right choice.
+- The wild bootstrap p-value for TWFE was 1.00, so the agency's number can't be told apart from zero.
+- The event study's pre-treatment estimates were small, which is consistent with parallel trends but doesn't prove it. With only 8 boards, the exact size of the effect is uncertain.
